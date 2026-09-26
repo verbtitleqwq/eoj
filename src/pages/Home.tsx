@@ -1,82 +1,64 @@
-import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 
-const navItems = [
-  { path: '/', label: '主页' },
-  { path: '/problems', label: '题库' },
-  { path: '/team', label: '团队' },
-  { path: '/me', label: '我的' },
-  { path: '/discussions', label: '讨论' },
+type Luck = '大吉' | '中吉' | '小吉' | '凶' | '大凶';
+
+const LUCK_TABLE: { luck: Luck; weight: number; coins: number }[] = [
+  { luck: '大吉', weight: 10, coins: 100 },
+  { luck: '中吉', weight: 15, coins: 50 },
+  { luck: '小吉', weight: 35, coins: 30 },
+  { luck: '凶', weight: 30, coins: 10 },
+  { luck: '大凶', weight: 20, coins: 5 },
 ];
 
-const Layout = () => {
-  const location = useLocation();
+function drawLuck(): { luck: Luck; coins: number } {
+  const total = LUCK_TABLE.reduce((s, i) => s + i.weight, 0);
+  let r = Math.random() * total;
+  for (const item of LUCK_TABLE) {
+    if (r < item.weight) return { luck: item.luck, coins: item.coins };
+    r -= item.weight;
+  }
+  return { luck: '凶', coins: 10 };
+}
+
+const Home = () => {
+  const [result, setResult] = useState<{ luck: Luck; coins: number } | null>(null);
 
   return (
-    <div className="w-screen h-screen flex">
-      <aside className="w-56 shrink-0 border-r bg-gray-50 flex flex-col">
-        <div className="h-14 flex items-center px-5 border-b font-bold text-lg">
-          VTQ OJ
+    <div className="p-8">
+      <div className="flex gap-6 items-stretch">
+        <div className="flex-1 rounded-lg overflow-hidden border bg-gray-50">
+          <img
+            src="https://cdn.luogu.com.cn/upload/image_hosting/bt8r9swc.webp"
+            alt="banner"
+            className="w-full h-auto"
+          />
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`block px-3 py-2 rounded-md text-sm ${
-                  active
-                    ? 'bg-blue-100 text-blue-700 font-medium'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+        <div className="w-64 shrink-0 border rounded-lg p-5 flex flex-col justify-center items-center">
+          {result ? (
+            <>
+              <div className="text-lg font-medium">
+                你的运气：<span className="text-blue-600">{result.luck}</span>
+              </div>
+              <div className="mt-2 text-gray-700">+{result.coins} V币</div>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setResult(drawLuck())}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                {item.label}
-              </Link>
-            );
-          })}
-
-          <div className="my-3 border-t" />
-
-          <a
-            href="https://www.luogu.com.cn/team/133998"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-          >
-            SAH OI
-          </a>
-
-          <div className="my-3 border-t" />
-
-          <Link
-            to="/stats"
-            className={`block px-3 py-2 rounded-md text-sm ${
-              location.pathname === '/stats'
-                ? 'bg-blue-100 text-blue-700 font-medium'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            统计
-          </Link>
-        </nav>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 shrink-0 border-b bg-white flex items-center justify-end px-6">
-          <div className="flex items-center gap-4 text-sm">
-            <Link to="/login" className="text-gray-600 hover:text-blue-600">登录</Link>
-            <Link to="/register" className="text-gray-600 hover:text-blue-600">注册</Link>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
+                签到
+              </button>
+              <div className="mt-3 text-xs text-gray-400 text-center">
+                签到可获得随机 V 币
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default Layout;
+export default Home;
